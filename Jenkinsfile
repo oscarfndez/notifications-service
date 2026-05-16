@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'oscarfndez/notifications-service'
         IMAGE_TAG = "build-${env.BUILD_NUMBER}"
-        SONAR_PROJECT_KEY = 'notifications-service'
+        SONAR_PROJECT_KEY = 'oscarfndez_notifications-service'
         SONAR_ORGANIZATION = 'oscarfndez'
     }
 
