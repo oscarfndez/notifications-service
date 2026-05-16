@@ -11,6 +11,7 @@ It consumes domain events from ActiveMQ and stores notifications in PostgreSQL. 
 - Create one notification per deleted inventory entity.
 - Create one user-notification row per active known user.
 - Track whether a user has read a notification.
+- Store notification translation keys and parameters instead of final rendered text.
 - Expose basic endpoints to list and mark notifications as read.
 
 ## Architecture Notes
@@ -18,6 +19,8 @@ It consumes domain events from ActiveMQ and stores notifications in PostgreSQL. 
 This service is intentionally event-driven. It does not read tables from `users-service` or `inventory-service`.
 
 Current trade-off: the `known_user` projection is populated from future user lifecycle events. Existing users created before this service starts will need a bootstrap/backfill step later, or a manual seed, before global notifications can be fanned out to them.
+
+Notification text is intentionally not stored as rendered text. The database stores `titleKey`, `messageKey`, and `paramsJson`; the frontend is responsible for translating and interpolating the notification according to the selected UI language.
 
 ## Requirements
 
@@ -60,6 +63,26 @@ mvn test
 
 ```http
 GET /api/notifications?userId={uuid}&page=0&size=10
+```
+
+Example item:
+
+```json
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "notificationId": "22222222-2222-2222-2222-222222222222",
+  "type": "game.deleted",
+  "titleKey": "notifications.inventory.gameDeleted.title",
+  "messageKey": "notifications.inventory.gameDeleted.message",
+  "paramsJson": "{\"name\":\"Elden Ring\"}",
+  "sourceService": "inventory",
+  "sourceEntityType": "GAME",
+  "sourceEntityId": "00000000-0000-0000-0000-000000000000",
+  "sourceEntityName": "Elden Ring",
+  "read": false,
+  "createdAt": "2026-05-15T12:00:00Z",
+  "readAt": null
+}
 ```
 
 ### Count Unread Notifications

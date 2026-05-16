@@ -1,5 +1,6 @@
 package com.oscarfndez.notifications.core.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oscarfndez.notifications.core.events.InventoryEntityDeletedEvent;
 import com.oscarfndez.notifications.persistence.entities.KnownUserEntity;
 import com.oscarfndez.notifications.persistence.entities.NotificationEntity;
@@ -25,7 +26,7 @@ class NotificationServiceTest {
     private final KnownUserRepository knownUserRepository = mock(KnownUserRepository.class);
     private final NotificationRepository notificationRepository = mock(NotificationRepository.class);
     private final UserNotificationRepository userNotificationRepository = mock(UserNotificationRepository.class);
-    private final NotificationService service = new NotificationService(knownUserRepository, notificationRepository, userNotificationRepository);
+    private final NotificationService service = new NotificationService(knownUserRepository, notificationRepository, userNotificationRepository, new ObjectMapper());
 
     @Test
     void createInventoryDeletedNotificationCreatesNotificationForEveryActiveKnownUser() {
@@ -39,6 +40,9 @@ class NotificationServiceTest {
         NotificationEntity notification = service.createInventoryDeletedNotification(event);
 
         assertThat(notification.getType()).isEqualTo("game.deleted");
+        assertThat(notification.getTitleKey()).isEqualTo("notifications.inventory.gameDeleted.title");
+        assertThat(notification.getMessageKey()).isEqualTo("notifications.inventory.gameDeleted.message");
+        assertThat(notification.getParamsJson()).isEqualTo("{\"name\":\"Elden Ring\"}");
         assertThat(notification.getSourceEntityType()).isEqualTo("GAME");
         assertThat(notification.getSourceEntityName()).isEqualTo("Elden Ring");
 

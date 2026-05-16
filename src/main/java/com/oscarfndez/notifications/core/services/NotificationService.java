@@ -1,5 +1,7 @@
 package com.oscarfndez.notifications.core.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oscarfndez.notifications.core.events.InventoryEntityDeletedEvent;
 import com.oscarfndez.notifications.persistence.entities.KnownUserEntity;
 import com.oscarfndez.notifications.persistence.entities.NotificationEntity;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -23,15 +26,18 @@ public class NotificationService {
     private final KnownUserRepository knownUserRepository;
     private final NotificationRepository notificationRepository;
     private final UserNotificationRepository userNotificationRepository;
+    private final ObjectMapper objectMapper;
 
     public NotificationService(
             KnownUserRepository knownUserRepository,
             NotificationRepository notificationRepository,
-            UserNotificationRepository userNotificationRepository
+            UserNotificationRepository userNotificationRepository,
+            ObjectMapper objectMapper
     ) {
         this.knownUserRepository = knownUserRepository;
         this.notificationRepository = notificationRepository;
         this.userNotificationRepository = userNotificationRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -40,8 +46,9 @@ public class NotificationService {
         NotificationEntity notification = notificationRepository.save(new NotificationEntity(
                 UUID.randomUUID(),
                 event.eventType(),
-                titleFor(event.entityType()),
-                messageFor(event),
+                titleKeyFor(event.entityType()),
+                messageKeyFor(event.entityType()),
+                paramsJsonFor(event),
                 "inventory",
                 event.entityType(),
                 event.entityId(),
@@ -77,19 +84,29 @@ public class NotificationService {
         return userNotificationRepository.save(userNotification);
     }
 
-    private String titleFor(String entityType) {
+    private String titleKeyFor(String entityType) {
         return switch (entityType.toUpperCase(Locale.ROOT)) {
-            case "GAME" -> "Game deleted";
-            case "PLATFORM" -> "Platform deleted";
-            case "STUDIO" -> "Studio deleted";
-            default -> "Inventory item deleted";
+            case "GAME" -> "notifications.inventory.gameDeleted.title";
+            case "PLATFORM" -> "notifications.inventory.platformDeleted.title";
+            case "STUDIO" -> "notifications.inventory.studioDeleted.title";
+            default -> "notifications.inventory.itemDeleted.title";
         };
     }
 
-    private String messageFor(InventoryEntityDeletedEvent event) {
-        String entityName = event.entityName() == null || event.entityName().isBlank()
-                ? "An inventory item"
-                : event.entityName();
-        return entityName + " has been deleted from the inventory.";
+    private String messageKeyFor(String entityType) {
+        return switch (entityType.toUpperCase(Locale.ROOT)) {
+            case "GAME" -> "notifications.inventory.gameDeleted.message";
+            case "PLATFORM" -> "notifications.inventory.platformDeleted.message";
+            case "STUDIO" -> "notifications.inventory.studioDeleted.message";
+            default -> "notifications.inventory.itemDeleted.message";
+        };
+    }
+
+    private String paramsJsonFor(InventoryEntityDeletedEvent event) {
+        try {
+            return objectMapper.writeValueAsString(Map.of("name", event.entityName() == null ? "" : event.entityName()));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Unable to serialize notification parameters.", exception);
+        }
     }
 }

@@ -19,10 +19,13 @@ public class NotificationEntity {
     private String type;
 
     @Column(nullable = false)
-    private String title;
+    private String titleKey;
 
     @Column(nullable = false)
-    private String message;
+    private String messageKey;
+
+    @Column(nullable = false)
+    private String paramsJson;
 
     @Column(nullable = false)
     private String sourceService;
@@ -44,11 +47,12 @@ public class NotificationEntity {
     protected NotificationEntity() {
     }
 
-    public NotificationEntity(UUID id, String type, String title, String message, String sourceService, String sourceEntityType, UUID sourceEntityId, String sourceEntityName, Instant occurredAt, Instant createdAt) {
+    public NotificationEntity(UUID id, String type, String titleKey, String messageKey, String paramsJson, String sourceService, String sourceEntityType, UUID sourceEntityId, String sourceEntityName, Instant occurredAt, Instant createdAt) {
         this.id = id;
         this.type = type;
-        this.title = title;
-        this.message = message;
+        this.titleKey = titleKey;
+        this.messageKey = messageKey;
+        this.paramsJson = paramsJson;
         this.sourceService = sourceService;
         this.sourceEntityType = sourceEntityType;
         this.sourceEntityId = sourceEntityId;
@@ -65,12 +69,16 @@ public class NotificationEntity {
         return type;
     }
 
-    public String getTitle() {
-        return title;
+    public String getTitleKey() {
+        return titleKey;
     }
 
-    public String getMessage() {
-        return message;
+    public String getMessageKey() {
+        return messageKey;
+    }
+
+    public String getParamsJson() {
+        return paramsJson;
     }
 
     public String getSourceService() {
